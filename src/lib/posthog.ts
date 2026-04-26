@@ -10,14 +10,10 @@ export function initPostHog(): void {
     capture_pageview: false,
     autocapture: false,
     persistence: 'localStorage+cookie',
-    loaded: (ph) => {
-      ph.register({ build_sha: env.buildSha });
-      ph.capture('$pageview');
-    },
   });
-  if (!env.isProd) {
-    (window as unknown as { __posthog: typeof posthog }).__posthog = posthog;
-  }
+  posthog.register({ build_sha: env.buildSha });
+  posthog.capture('$pageview');
+  (window as unknown as { __posthog: typeof posthog }).__posthog = posthog;
   initialized = true;
 }
 
