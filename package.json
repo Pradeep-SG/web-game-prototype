@@ -19,7 +19,6 @@
     "@sentry/react": "^8.45.0",
     "@supabase/supabase-js": "^2.46.0",
     "howler": "^2.2.4",
-    "posthog-js": "^1.194.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "three": "^0.170.0",

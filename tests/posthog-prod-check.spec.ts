@@ -21,14 +21,37 @@ test('posthog event POST reaches api host from clean chromium', async ({ browser
     }
   });
   page.on('pageerror', (e) => console.log('[pageerror]', e.message));
+  page.on('console', (m) => {
+    const t = m.text();
+    if (/posthog/i.test(t)) console.log(`[ph-console.${m.type()}] ${t.slice(0, 300)}`);
+  });
 
-  await page.goto('https://ember.pradeepsg2001.workers.dev/', {
+  // ?__posthog_debug=true enables PostHog's verbose console logging.
+  await page.goto('https://ember.pradeepsg2001.workers.dev/?__posthog_debug=true', {
     waitUntil: 'networkidle',
     timeout: 30_000,
   });
-  await page.waitForTimeout(12_000); // generous: PostHog batch flush can take 10s
+  await page.waitForTimeout(8_000);
+
+  // Force a capture AFTER warm-up to test post-init flow.
+  const postWarmCapture = await page.evaluate(() => {
+    const w = window as unknown as {
+      __posthog?: { capture: (e: string) => void; flush?: () => void };
+    };
+    if (!w.__posthog) return { ok: false, why: 'no __posthog' };
+    try {
+      w.__posthog.capture('claude_post_warm_probe');
+      w.__posthog.flush?.();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, why: String(e) };
+    }
+  });
+  console.log('post-warm-capture:', JSON.stringify(postWarmCapture));
+
+  await page.waitForTimeout(5_000);
   await page.goto('about:blank');
-  await page.waitForTimeout(3_000); // give sendBeacon time on unload
+  await page.waitForTimeout(2_000);
 
   const apiPosts = events.filter(
     (e) => /posthog\.com/.test(e.url) && !/-assets\./.test(e.url) && e.url.includes('/i/v0/e/'),
