@@ -10,6 +10,7 @@ export function initPostHog(): void {
     capture_pageview: false,
     autocapture: false,
     persistence: 'localStorage+cookie',
+    request_batching: false,
   });
   posthog.register({ build_sha: env.buildSha });
   posthog.capture('$pageview');
