@@ -7,13 +7,17 @@ export function initPostHog(): void {
   if (initialized || !hasPostHog() || typeof window === 'undefined') return;
   posthog.init(env.posthogKey, {
     api_host: env.posthogHost,
-    capture_pageview: true,
+    capture_pageview: false,
     autocapture: false,
     persistence: 'localStorage+cookie',
     loaded: (ph) => {
       ph.register({ build_sha: env.buildSha });
+      ph.capture('$pageview');
     },
   });
+  if (!env.isProd) {
+    (window as unknown as { __posthog: typeof posthog }).__posthog = posthog;
+  }
   initialized = true;
 }
 
